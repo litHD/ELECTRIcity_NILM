@@ -10,8 +10,8 @@ class Refit_Parser:
     def __init__(self, args, stats = None):
         self.dataset_location = args.refit_location
         assert 'Data','Labels' in os.listdir(self.dataset_location);'Incorrect Folder Structure'
-        self.data_location    = Path(args.refit_location).joinpath('Data')
-        self.labels_location  = Path(args.refit_location).joinpath('Labels')
+        self.data_location    = Path(args.refit_location).joinpath('data')
+        self.labels_location  = Path(args.refit_location).joinpath('labels')
 
         self.appliance_names  = args.appliance_names
         self.sampling         = args.sampling
@@ -20,7 +20,7 @@ class Refit_Parser:
         self.house_indicies  = args.house_indicies
 
 
-        self.cutoff        =  [args.cutoff[appl]    for appl in ['Aggregate']+args.appliance_names]
+        self.cutoff        =  [args.cutoff[appl]    for appl in ['aggregate']+args.appliance_names]
         self.threshold     =  [args.threshold[appl] for appl in args.appliance_names]
         self.min_on        =  [args.min_on[appl]    for appl in args.appliance_names]
         self.min_off       =  [args.min_off[appl]   for appl in args.appliance_names]
@@ -46,14 +46,14 @@ class Refit_Parser:
 
     def load_data(self):
         for house_idx in self.house_indicies:
-            filename  = 'House'+str(house_idx)+'.csv'
-            labelname = 'House'+str(house_idx)+'.txt'
+            filename  = 'house'+str(house_idx)+'.csv'
+            labelname = 'house'+str(house_idx)+'.txt'
             house_data_loc = self.data_location/filename
 
             with open(self.labels_location/labelname) as f:
                 house_labels = f.readlines()
 
-            house_labels = ['Time'] + house_labels[0].split(',')
+            house_labels = ['Time'] + house_labels[0].lower().strip('\n').split(',')
 
             if self.appliance_names[0] in house_labels:
                 house_data = pd.read_csv(house_data_loc)
@@ -63,9 +63,9 @@ class Refit_Parser:
                 house_data.columns = house_labels
                 house_data = house_data.set_index('Time')
 
-                idx_to_drop = house_data[house_data['Issues']==1].index
+                idx_to_drop = house_data[house_data['issues']==1].index
                 house_data = house_data.drop(index = idx_to_drop, axis = 0)
-                house_data = house_data[['Aggregate',self.appliance_names[0]]]
+                house_data = house_data[['aggregate',self.appliance_names[0]]]
                 house_data = house_data.resample(self.sampling).mean().fillna(method='ffill', limit=30)
 
                 if house_idx == self.house_indicies[0]:
@@ -77,7 +77,7 @@ class Refit_Parser:
 
 
         entire_data                  = entire_data.dropna().copy()
-        entire_data                  = entire_data[entire_data['Aggregate'] > 0] #remove negative values (possible mistakes)
+        entire_data                  = entire_data[entire_data['aggregate'] > 0] #remove negative values (possible mistakes)
         entire_data[entire_data < 5] = 0 #remove very low values
         entire_data                  = entire_data.clip([0] * len(entire_data.columns), self.cutoff, axis=1) # force values to be between 0 and cutoff
 
