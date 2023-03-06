@@ -65,7 +65,7 @@ def get_args():
 
     args.ukdale_location = 'data/ukdale'
     args.redd_location   = 'data/redd'
-    args.refit_location  = 'data/refit'
+    #args.refit_location  = 'data/refit'
     args.appliance_names =args.appliance_names.split(',')
 
     args = update_preprocessing_parameters(args)
@@ -171,7 +171,7 @@ def update_preprocessing_parameters(args):
             'Kettle'         : 3000,
             'fridge' : 1700,
             'Washing_Machine': 2500,
-            'Microwave'      : 1300,
+            'microwave'      : 1300,
             'Dishwasher'     : 2500,
             'TV'             : 80
         }
@@ -179,7 +179,7 @@ def update_preprocessing_parameters(args):
             'Kettle'         : 2000,
             'fridge' : 5,
             'Washing_Machine': 20,
-            'Microwave'      : 200,
+            'microwave'      : 200,
             'Dishwasher'     : 10,
             'TV'             : 10
         }
@@ -188,7 +188,7 @@ def update_preprocessing_parameters(args):
             'Kettle'         : 2,
             'fridge' : 10,
             'Washing_Machine': 10,
-            'Microwave'      : 2,
+            'microwave'      : 2,
             'Dishwasher'     : 300,
             'TV'             : 2
         }
@@ -197,7 +197,7 @@ def update_preprocessing_parameters(args):
             'Kettle'         : 0,
             'fridge' : 2,
             'Washing_Machine': 26,
-            'Microwave'      : 5,
+            'microwave'      : 5,
             'Dishwasher'     : 300,
             'TV'             : 0
         }
@@ -205,7 +205,7 @@ def update_preprocessing_parameters(args):
             'Kettle'         : 1.,
             'fridge' : 1e-6,
             'Washing_Machine': 0.01,
-            'Microwave'      : 1.,
+            'microwave'      : 1.,
             'Dishwasher'     : 1.,
             'TV'             : 1.
         }

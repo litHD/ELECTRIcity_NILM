@@ -20,8 +20,12 @@ def cutoff_energy(data, cutoff):
     return data
 
 def find_nonzero_runs(a):
+    if len(a.shape) ==1:
+        zeros = np.zeros((1,))
+    if len(a.shape) ==2:
+        zeros = np.zeros((1,1))
     # Create an array that is 1 where a is nonzero, and pad each end with an extra 0.
-    isnonzero = np.concatenate(([[0]], (np.asarray(a) != 0).view(np.int8), [[0]]))
+    isnonzero = np.concatenate((zeros, (np.asarray(a) != 0).view(np.int8), zeros))
     absdiff = np.abs(np.diff(isnonzero))
     # Runs start and end where absdiff is 1.
     ranges = np.where(absdiff == 1)[0].reshape(-1, 2)
@@ -130,12 +134,14 @@ def log_data_and_images(path,aggregate,pred,labels,f_sampling,appliance,args,sho
     if len(aggregate.shape) == 2:
         aggregate = np.squeeze(aggregate, axis=-1)
 
+    print("prediction shape", pred.shape)
+    print("ground truth shape", labels.shape)
+    print("aggregate shape", aggregate.shape)
+
     status_l = compute_status(labels,args.treshold,args.min_on)
     status_p = compute_status(labels,args.treshold,args.min_on)
 
-    print(pred.shape)
-    print(labels.shape)
-    print(aggregate.shape)
+
     assert pred.shape == labels.shape
     assert aggregate.shape[0] == pred.shape[0]
     assert status_l.shape == status_p.shape
@@ -203,6 +209,8 @@ if __name__ =="__main__":
     parser.add_argument('--hidden', type=int, default=256)
     parser.add_argument('--heads', type=int, default=2)
     parser.add_argument('--n_layers', type=int, default=2)
+    parser.add_argument('--mean_train', type=float, default=None)
+    parser.add_argument('--std_train', type=float, default=None)
     args = parser.parse_args()
     args.pretrain =False
     args.mul = int(((args.window_size/args.stride)-1)/2)
@@ -219,10 +227,14 @@ if __name__ =="__main__":
     mean = np.mean(x)
     std = np.std(x)
     model.eval()
-
+    if args.mean_train is not None and args.std_train is not None:
+        args.inference_cutoff = (args.cutoff+np.abs(mean-args.mean_train))*(std/args.std_train)
+    else:
+        args.inference_cutoff = args.cutoff
     energy_res = []
     status_res = []
     x = x[:args.until]
+    print(y.shape)
     print(x.shape)
     for i in tqdm(np.arange(0, x.shape[0],args.stride)):
 
@@ -233,7 +245,7 @@ if __name__ =="__main__":
         with torch.no_grad():
             logits = model(seqs.float())
             logits = logits[0].cpu().numpy().squeeze()
-            logits_energy = cutoff_energy(logits *args.cutoff, float(args.cutoff))
+            logits_energy = cutoff_energy(logits *args.inference_cutoff, float(args.inference_cutoff))
             logits_energy = logits_energy 
         if i==0:
             energy_res.append(logits_energy[:(args.mul+1)*args.stride])
@@ -244,4 +256,4 @@ if __name__ =="__main__":
         energy = np.concatenate(energy_res)
         
 
-    log_data_and_images(f'./logs/logs_ELECTRIcity_NILM', x,energy[:args.until], y[:args.until], args.f_sampling, args.appliance, args,show=True)
+    log_data_and_images(f'./logs/logs_ELECTRIcity_NILM', x,energy[:x.shape[0]], y[:x.shape[0]], args.f_sampling, args.appliance, args,show=True)

@@ -1,0 +1,1 @@
+{"appliances": "microwave", "accuracy": [1.0], "precision": [1.0], "recall": [1.0], "f1_score": [1.0], "relative_error": [0.023299947700786767], "absolute_error": [7.589204643290666], "tot_appl_wh": [18848.583333333332], "predicted_percentage": [0.16287267987748769]}
