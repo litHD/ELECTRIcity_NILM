@@ -36,6 +36,8 @@ class Refit_Parser:
             if stats is None:
                 self.x_mean = np.mean(self.x)
                 self.x_std  = np.std(self.x)
+                print("mean", self.x_mean)
+                print("std", self.x_std)
             else:
                 self.x_mean,self.x_std = stats
             self.x = (self.x - self.x_mean) / self.x_std

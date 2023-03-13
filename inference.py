@@ -139,22 +139,12 @@ def log_data_and_images(path,aggregate,pred,labels,f_sampling,appliance,args,sho
     print("aggregate shape", aggregate.shape)
 
     status_l = compute_status(labels,args.treshold,args.min_on)
-    status_p = compute_status(labels,args.treshold,args.min_on)
+    status_p = compute_status(pred,args.treshold,args.min_on)
 
 
     assert pred.shape == labels.shape
     assert aggregate.shape[0] == pred.shape[0]
     assert status_l.shape == status_p.shape
-
-    if os.path.exists(path):
-
-        if len(os.listdir(path)) == 0:
-            pass
-        else:
-            print("found a non empty directory")    
-            return
-    else:
-        os.makedirs(path)
         
     acc, precision, recall, f1_score = acc_precision_recall_f1_score(status_p, status_l)
     rel_error, abs_error = relative_absolute_error(pred, labels)
@@ -179,9 +169,21 @@ def log_data_and_images(path,aggregate,pred,labels,f_sampling,appliance,args,sho
     plt.plot(range(aggregate.shape[0]), labels[:, 0], label='Ground truth')
     plt.plot(range(aggregate.shape[0]), pred[:, 0], label='Prediction')
     plt.legend()
-    plt.savefig(os.path.join(path, f"{appliance}.png"))
     if show:
         plt.show()
+    
+    if os.path.exists(path):
+
+        if len(os.listdir(path)) == 0:
+            pass
+        else:
+            print("found a non empty directory")    
+            return
+    else:
+        os.makedirs(path)
+        
+    plt.savefig(os.path.join(path, f"{appliance}.png"))
+
     with open(os.path.join(path,"metrics.json"), 'w') as outfile:
         json.dump(metrics, outfile)
     with open(os.path.join(path,"parameters.json"), 'w') as outfile:

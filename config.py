@@ -65,7 +65,7 @@ def get_args():
 
     args.ukdale_location = 'data/ukdale'
     args.redd_location   = 'data/redd'
-    #args.refit_location  = 'data/refit'
+    #args.refit_location  = '../BERT4NILM/data/refit'
     args.appliance_names =args.appliance_names.split(',')
 
     args = update_preprocessing_parameters(args)
@@ -167,47 +167,47 @@ def update_preprocessing_parameters(args):
         }
     elif args.dataset_code == 'refit':    
         args.cutoff = {
-            'aggregate'      : 10000,
-            'Kettle'         : 3000,
+            'aggregate'      : 6500,
+            'kettle'         : 3000,
             'fridge' : 1700,
-            'Washing_Machine': 2500,
+            'washing_machine': 2500,
             'microwave'      : 1300,
-            'Dishwasher'     : 2500,
-            'TV'             : 80
+            'dishwasher'     : 2500,
+            'tv'             : 80
         }
         args.threshold = {
-            'Kettle'         : 2000,
+            'kettle'         : 2000,
             'fridge' : 5,
-            'Washing_Machine': 20,
+            'washing_machine': 20,
             'microwave'      : 200,
-            'Dishwasher'     : 10,
-            'TV'             : 10
+            'dishwasher'     : 10,
+            'tv'             : 10
         }
         #multiply by 6 for seconds
         args.min_on = {
-            'Kettle'         : 2,
+            'kettle'         : 2,
             'fridge' : 10,
-            'Washing_Machine': 10,
+            'washing_machine': 10,
             'microwave'      : 2,
-            'Dishwasher'     : 300,
-            'TV'             : 2
+            'dishwasher'     : 300,
+            'tv'             : 2
         }
         #multiply by 6 for seconds
         args.min_off = {
-            'Kettle'         : 0,
+            'kettle'         : 0,
             'fridge' : 2,
-            'Washing_Machine': 26,
+            'washing_machine': 26,
             'microwave'      : 5,
-            'Dishwasher'     : 300,
-            'TV'             : 0
+            'dishwasher'     : 300,
+            'tv'             : 0
         }
         args.c0 = {
-            'Kettle'         : 1.,
+            'kettle'         : 1.,
             'fridge' : 1e-6,
-            'Washing_Machine': 0.01,
+            'washing_machine': 0.01,
             'microwave'      : 1.,
-            'Dishwasher'     : 1.,
-            'TV'             : 1.
+            'dishwasher'     : 1.,
+            'tv'             : 1.
         }
 
     args.window_stride  = 120 if args.dataset_code == 'redd_lf' else 240 

@@ -1,1 +1,1 @@
-{"appliances": "microwave", "accuracy": [1.0], "precision": [1.0], "recall": [1.0], "f1_score": [1.0], "relative_error": [0.023262156494855267], "absolute_error": [7.560758505836563], "tot_appl_wh": [18848.583333333332], "predicted_percentage": [0.15766749810930678]}
+{"appliances": "microwave", "accuracy": [1.0], "precision": [1.0], "recall": [1.0], "f1_score": [1.0], "relative_error": [0.022328404978219654], "absolute_error": [7.198165227647887], "tot_appl_wh": [18848.583333333332], "predicted_percentage": [0.09118362248400566]}
