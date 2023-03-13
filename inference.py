@@ -1,4 +1,5 @@
 from Electricity_model import ELECTRICITY
+from config import update_preprocessing_parameters
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -218,6 +219,8 @@ if __name__ =="__main__":
     args.mul = int(((args.window_size/args.stride)-1)/2)
     
     model = ELECTRICITY(args)
+    args.dataset_code = args.trained_on
+    update_preprocessing_parameters(args)
     print(model)
     model.to(args.device)
     model.float()
@@ -229,6 +232,11 @@ if __name__ =="__main__":
     mean = np.mean(x)
     std = np.std(x)
     model.eval()
+    args.cutoff = args.cutoff[args.appliance]
+    args.min_on = args.min_on[args.appliance]
+    args.treshold = args.threshold[args.appliance]
+    args.c0 = 0
+    args.min_off = 0
     if args.mean_train is not None and args.std_train is not None:
         args.inference_cutoff = (args.cutoff+np.abs(mean-args.mean_train))*(std/args.std_train)
     else:

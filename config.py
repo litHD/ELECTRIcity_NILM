@@ -210,6 +210,6 @@ def update_preprocessing_parameters(args):
             'tv'             : 1.
         }
 
-    args.window_stride  = 120 if args.dataset_code == 'redd_lf' else 240 
+    #args.window_stride  = 120 if args.dataset_code == 'redd_lf' else 240 
     args.house_indicies = [1, 2, 3, 4, 5, 6] if args.dataset_code == 'redd_lf' else [1,2,3,4,5] if args.dataset_code =='uk_dale' else [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]
     return args

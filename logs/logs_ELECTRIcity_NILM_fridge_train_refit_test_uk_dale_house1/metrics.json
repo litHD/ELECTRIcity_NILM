@@ -1,1 +1,1 @@
-{"appliances": "fridge", "accuracy": [1.0], "precision": [1.0], "recall": [1.0], "f1_score": [1.0], "relative_error": [0.48119114322213097], "absolute_error": [36.30698432412412], "tot_appl_wh": [1877.8866666666668], "predicted_percentage": [0.13220086396939232]}
+{"appliances": "fridge", "accuracy": [0.73845], "precision": [0.6835415216674603], "recall": [0.7256747297192191], "f1_score": [0.7039782694810707], "relative_error": [0.45040572889466557], "absolute_error": [31.977405123233794], "tot_appl_wh": [3974.6016666666665], "predicted_percentage": [0.3640475872357755]}
