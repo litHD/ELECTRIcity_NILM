@@ -125,7 +125,7 @@ def Wh_estimate(pred, label, f_sampling):
     
 def log_data_and_images(path,aggregate,pred,labels,f_sampling,appliance,args,show=False):
    
-    path = f"{path}_{appliance}_train_{args.trained_on}_test_{args.tested_on}"
+    path = f"{path}_{appliance}_train_{args.trained_on}_test_{args.tested_on}_{args.house_id}"
     if len(pred.shape) == 1:
         pred = np.expand_dims(pred,-1)
 
@@ -141,7 +141,7 @@ def log_data_and_images(path,aggregate,pred,labels,f_sampling,appliance,args,sho
 
     status_l = compute_status(labels,args.treshold,args.min_on)
     status_p = compute_status(pred,args.treshold,args.min_on)
-
+    pred[pred < args.treshold] = 0
 
     assert pred.shape == labels.shape
     assert aggregate.shape[0] == pred.shape[0]
@@ -170,8 +170,7 @@ def log_data_and_images(path,aggregate,pred,labels,f_sampling,appliance,args,sho
     plt.plot(range(aggregate.shape[0]), labels[:, 0], label='Ground truth')
     plt.plot(range(aggregate.shape[0]), pred[:, 0], label='Prediction')
     plt.legend()
-    if show:
-        plt.show()
+
     
     if os.path.exists(path):
 
@@ -184,7 +183,8 @@ def log_data_and_images(path,aggregate,pred,labels,f_sampling,appliance,args,sho
         os.makedirs(path)
         
     plt.savefig(os.path.join(path, f"{appliance}.png"))
-
+    if show:
+        plt.show()
     with open(os.path.join(path,"metrics.json"), 'w') as outfile:
         json.dump(metrics, outfile)
     with open(os.path.join(path,"parameters.json"), 'w') as outfile:
@@ -212,35 +212,42 @@ if __name__ =="__main__":
     parser.add_argument('--hidden', type=int, default=256)
     parser.add_argument('--heads', type=int, default=2)
     parser.add_argument('--n_layers', type=int, default=2)
-    parser.add_argument('--mean_train', type=float, default=None)
-    parser.add_argument('--std_train', type=float, default=None)
+    #parser.add_argument('--mean_train', type=float, default=None)
+    #parser.add_argument('--std_train', type=float, default=None)
+    parser.add_argument('--house_id', type=int)
     args = parser.parse_args()
     args.pretrain =False
     args.mul = int(((args.window_size/args.stride)-1)/2)
-    
-    model = ELECTRICITY(args)
     args.dataset_code = args.trained_on
+
     update_preprocessing_parameters(args)
+
+    args.cutoff = args.cutoff[args.appliance]
+    args.min_on = args.min_on[args.appliance]
+    args.treshold = args.threshold[args.appliance]
+    args.c0 = 0
+    args.min_off = 0
+
+    model = ELECTRICITY(args)
     print(model)
     model.to(args.device)
     model.float()
     model.load_state_dict(torch.load(args.model_path))
 
     
-    x = np.load(args.main_path)  
-    y = np.load(args.appliance_path)
+    x = np.load(os.path.join(args.main_path, f'house{args.house_id}.npy'))  
+    y = np.load(os.path.join(args.appliance_path, f'house{args.house_id}.npy'))
+
     mean = np.mean(x)
     std = np.std(x)
+
     model.eval()
-    args.cutoff = args.cutoff[args.appliance]
-    args.min_on = args.min_on[args.appliance]
-    args.treshold = args.threshold[args.appliance]
-    args.c0 = 0
-    args.min_off = 0
-    if args.mean_train is not None and args.std_train is not None:
-        args.inference_cutoff = (args.cutoff+np.abs(mean-args.mean_train))*(std/args.std_train)
-    else:
-        args.inference_cutoff = args.cutoff
+    
+
+    # if args.mean_train is not None and args.std_train is not None:
+    #     args.inference_cutoff = (args.cutoff+np.abs(mean-args.mean_train))*(std/args.std_train)
+    # else:
+    #     args.inference_cutoff = args.cutoff
     energy_res = []
     status_res = []
     x = x[:args.until]
@@ -255,7 +262,7 @@ if __name__ =="__main__":
         with torch.no_grad():
             logits = model(seqs.float())
             logits = logits[0].cpu().numpy().squeeze()
-            logits_energy = cutoff_energy(logits *args.inference_cutoff, float(args.inference_cutoff))
+            logits_energy = cutoff_energy(logits *args.cutoff, float(args.cutoff))
             logits_energy = logits_energy 
         if i==0:
             energy_res.append(logits_energy[:(args.mul+1)*args.stride])
@@ -264,6 +271,6 @@ if __name__ =="__main__":
             energy_res.append(logits_energy[+args.mul*args.stride:-args.mul*args.stride])
 
         energy = np.concatenate(energy_res)
-        
+        energy[energy<10] = 0        
 
-    log_data_and_images(f'./logs/logs_ELECTRIcity_NILM', x,energy[:x.shape[0]], y[:x.shape[0]], args.f_sampling, args.appliance, args,show=True)
+    log_data_and_images('./logs/', x,energy[:x.shape[0]], y[:x.shape[0]], args.f_sampling, args.appliance, args,show=True)
