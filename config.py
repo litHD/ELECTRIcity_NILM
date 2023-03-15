@@ -8,14 +8,15 @@ def get_args():
     parser.add_argument('--redd_location',      type = str, default = None)
     parser.add_argument('--ukdale_location',    type = str, default = None)
     parser.add_argument('--refit_location',     type = str, default = None)
+    parser.add_argument('--custom_location',    type = str, default = None)
     parser.add_argument('--export_root',        type = str, default = 'results')
 
 
     parser.add_argument('--seed',               type = int,   default = 0)
     parser.add_argument('--device',             type = str,   default = 'cpu' ,    choices=['cpu', 'cuda'])
 
-    parser.add_argument('--dataset_code',       type = str,   default = 'refit', choices=['redd_lf', 'uk_dale','refit'])
-    parser.add_argument('--house_indicies',     type = list,  default = [ 2, 3, 4, 5, 16])
+    parser.add_argument('--dataset_code',       type = str,   default = 'refit', choices=['redd_lf', 'uk_dale','refit', 'custom'])
+    parser.add_argument('--house_indicies',     type = str,  default = None)
 
     # REDD Dataset appliance names:    'refrigerator', 'washer_dryer',   'microwave','dishwasher'
     # UK Dale Dataset appliance names: 'fridge',       'washing_machine','microwave','dishwasher','kettle','toaster'
@@ -67,6 +68,7 @@ def get_args():
     args.redd_location   = 'data/redd'
     #args.refit_location  = '../BERT4NILM/data/refit'
     args.appliance_names =args.appliance_names.split(',')
+    args.house_indicies = args.house_indicies.split(',')
 
     args = update_preprocessing_parameters(args)
     if torch.cuda.is_available():
@@ -77,6 +79,7 @@ def get_args():
 
 
 def setup_seed(seed):
+    torch.cuda.empty_cache()
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark     = False  
     random.seed(seed)                          
@@ -209,7 +212,52 @@ def update_preprocessing_parameters(args):
             'dishwasher'     : 1.,
             'tv'             : 1.
         }
+        
+    elif args.dataset_code == 'custom':    
+        args.cutoff = {
+            'aggregate'      : 6500,
+            'kettle'         : 3000,
+            'fridge' : 1700,
+            'washing_machine': 2500,
+            'microwave'      : 1400,
+            'dishwasher'     : 2500,
+            'tv'             : 80
+        }
+        args.threshold = {
+            'kettle'         : 2000,
+            'fridge' : 20,
+            'washing_machine': 30,
+            'microwave'      : 300,
+            'dishwasher'     : 10,
+            'tv'             : 10
+        }
+        #multiply by 6 for seconds
+        args.min_on = {
+            'kettle'         : 2,
+            'fridge' : 10,
+            'washing_machine': 10,
+            'microwave'      : 2,
+            'dishwasher'     : 300,
+            'tv'             : 2
+        }
+        #multiply by 6 for seconds
+        args.min_off = {
+            'kettle'         : 0,
+            'fridge' : 2,
+            'washing_machine': 26,
+            'microwave'      : 5,
+            'dishwasher'     : 300,
+            'tv'             : 0
+        }
+        args.c0 = {
+            'kettle'         : 1.,
+            'fridge' : 1e-6,
+            'washing_machine': 0.01,
+            'microwave'      : 1.,
+            'dishwasher'     : 1.,
+            'tv'             : 1.
+        }
 
     #args.window_stride  = 120 if args.dataset_code == 'redd_lf' else 240 
-    args.house_indicies = [1, 2, 3, 4, 5, 6] if args.dataset_code == 'redd_lf' else [1,2,3,4,5] if args.dataset_code =='uk_dale' else [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]
+    #args.house_indicies = [1, 2, 3, 4, 5, 6] if args.dataset_code == 'redd_lf' else [1,2,3,4,5] if args.dataset_code =='uk_dale' else [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]
     return args

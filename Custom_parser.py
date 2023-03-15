@@ -5,13 +5,11 @@ from pathlib import Path
 from   NILM_Dataset     import *
 from   Pretrain_Dataset import *
 
-class Refit_Parser:
+class Custom_Parser:
 
     def __init__(self, args, stats = None):
-        self.dataset_location = args.refit_location
-        assert 'Data','Labels' in os.listdir(self.dataset_location);'Incorrect Folder Structure'
-        self.data_location    = Path(args.refit_location).joinpath('data')
-        self.labels_location  = Path(args.refit_location).joinpath('labels')
+        self.dataset_location = args.custom_location
+        self.data_location    = Path(args.custom_location)
 
         self.appliance_names  = args.appliance_names
         self.sampling         = args.sampling
@@ -49,43 +47,20 @@ class Refit_Parser:
 
 
     def load_data(self):
+
+        entire_main = []
+        entire_appl = []
+
         for house_idx in self.house_indicies:
-            filename  = 'house'+str(house_idx)+'.csv'
-            labelname = 'house'+str(house_idx)+'.txt'
-            house_data_loc = self.data_location/filename
-
-            with open(self.labels_location/labelname) as f:
-                house_labels = f.readlines()
-
-            house_labels = ['Time'] + house_labels[0].lower().strip('\n').split(',')
-
-            if self.appliance_names[0] in house_labels:
-                house_data = pd.read_csv(house_data_loc)
-                house_data['Unix'] = pd.to_datetime(house_data['Unix'], unit = 's')
-
-                house_data         = house_data.drop(labels = ['Time'],axis = 1)
-                house_data.columns = house_labels
-                house_data = house_data.set_index('Time')
-
-                idx_to_drop = house_data[house_data['issues']==1].index
-                house_data = house_data.drop(index = idx_to_drop, axis = 0)
-                house_data = house_data[['aggregate',self.appliance_names[0]]]
-                house_data = house_data.resample(self.sampling).mean().fillna(method='ffill', limit=30)
-
-                if house_idx == self.house_indicies[0]:
-                    entire_data = house_data
-                    if len(self.house_indicies) == 1:
-                        entire_data = entire_data.reset_index(drop=True)
-                else:
-                    entire_data = entire_data.append(house_data, ignore_index=True)
-
-
-        entire_data                  = entire_data.dropna().copy()
-        entire_data                  = entire_data[entire_data['aggregate'] > 0] #remove negative values (possible mistakes)
-        entire_data[entire_data < 5] = 0 #remove very low values
-        entire_data                  = entire_data.clip([0] * len(entire_data.columns), self.cutoff, axis=1) # force values to be between 0 and cutoff
-
-        return entire_data.values[:, 0], entire_data.values[:, 1]
+            filename  = f'house{house_idx}.npy'
+            main_loc= f'{self.data_location}/aggregate/{filename}'
+            appl_loc= f'{self.data_location}/{self.appliance_names[0]}/{filename}' 
+            
+            entire_main.append(np.load(main_loc))
+            entire_appl.append(np.load(appl_loc))
+        x = np.concatenate(entire_main, axis=0,  dtype=np.float32).squeeze()
+        y = np.concatenate(entire_appl, axis=0,  dtype=np.float32).squeeze()
+        return x, y
 
 
 

@@ -19,6 +19,7 @@ class Trainer:
         self.pretrain_num_epochs = args.pretrain_num_epochs
         self.num_epochs          = args.num_epochs
         self.model               = model.to(args.device)
+        self.model.float()
         self.export_root         = Path(args.export_root).joinpath(args.dataset_code).joinpath(args.appliance_names[0])
         self.best_model_epoch    = None
 
@@ -112,6 +113,7 @@ class Trainer:
     def pretrain_one_epoch(self,epoch):
         loss_values = []
         self.model.train()
+        self.model.float()
         tqdm_dataloader = tqdm(self.pretrain_loader)
         for _,batch in enumerate(tqdm_dataloader):
             x, y, status = [batch[i].to(self.device) for i in range(3)]
@@ -123,13 +125,13 @@ class Trainer:
 
             logits, gen_out, logits_y, logits_status    = self.get_model_outputs(x,mask)
 
-            logits_masked        = torch.masked_select(logits       , mask).view((-1))
-            labels_masked        = torch.masked_select(y_capped     , mask).view((-1))
+            logits_masked        = torch.masked_select(logits       , mask).view((-1)).float()
+            labels_masked        = torch.masked_select(y_capped     , mask).view((-1)).float()
             # status_masked        = torch.masked_select(status       , mask).view((-1))
             # logits_status_masked = torch.masked_select(logits_status, mask).view((-1))
-            gen_out = gen_out.view(-1)
+            gen_out = gen_out.view(-1).float()
 
-            mask = mask.view(-1).type(torch.DoubleTensor).to(self.device)
+            mask = mask.view(-1).type(torch.FloatTensor).to(self.device)
 
             total_loss = self.loss_fn_pretrain(logits_masked,labels_masked,gen_out,mask)
             
@@ -147,6 +149,7 @@ class Trainer:
     def train_one_epoch(self,epoch):
         loss_values = []
         self.model.train()
+        self.model.float()
         tqdm_dataloader = tqdm(self.train_loader)
         for _,batch in enumerate(tqdm_dataloader):
             x, y, status = [batch[i].to(self.device) for i in range(3)]
@@ -168,6 +171,7 @@ class Trainer:
 
     def validate(self):
         self.model.eval()
+        self.model.float()
         self.val_metrics_dict = {
                             'mae'      : [],
                             'mre'      : [],
@@ -201,6 +205,7 @@ class Trainer:
     def test(self,test_loader):
         self._load_best_model()
         self.model.eval()
+        self.model.float()
         y_pred_curve, y_curve,s_pred_curve,status_curve = [], [], [], []
 
         with torch.no_grad():
@@ -243,6 +248,9 @@ class Trainer:
         if not os.path.exists(self.export_root):
             os.makedirs(self.export_root)
         print('Saving best model...')
+        with open(self.export_root.joinpath("parameters.json"), 'w') as outfile:
+            a = vars(self.args)
+            json.dump(a, outfile)
         torch.save(self.model.state_dict(), self.export_root.joinpath('best_acc_model.pth'))
 
     def update_metrics_dict(self,mae,mre,acc,precision,recall,f1, mode = 'val'):
@@ -269,8 +277,8 @@ class Trainer:
             self.test_metrics_dict['f1'       ].append(f1) 
 
     def get_model_outputs(self, x,mask=None):
-
-        logits, gen_out = self.model(x,mask)
+        self.model.float()
+        logits, gen_out = self.model(x.float(),mask)
         logits_y        = self.cutoff_energy(logits*self.cutoff)
         logits_status   = self.compute_status(logits_y)
     
@@ -278,7 +286,7 @@ class Trainer:
 
     def cutoff_energy(self,data):
         data[data<5] = 0
-        data = torch.min(data,self.cutoff.double())
+        data = torch.min(data,self.cutoff.float())
         return data
         
     def compute_status(self,data):
@@ -308,6 +316,9 @@ class Trainer:
         if not os.path.exists(self.export_root):
             os.makedirs(self.export_root)
         print('Saving best model...')
+        with open(self.export_root.joinpath("parameters.json"), 'w') as outfile:
+            a = vars(self.args)
+            json.dump(a, outfile)
         torch.save(self.model.state_dict(), self.export_root.joinpath('best_acc_model.pth'))
 
     def _load_best_model(self):
@@ -323,10 +334,13 @@ class Trainer:
         filepath = Path(self.export_root).joinpath(filename)
         with filepath.open('w') as f:
             json.dump(data, f, indent=2)
+        with open(self.export_root.joinpath("parameters.json"), 'w') as outfile:
+            a = vars(self.args)
+            json.dump(a, outfile)
 
     def loss_fn_gen(self,logits_masked,labels_masked):
-        mse_arg_1 = logits_masked.contiguous().view(-1).double()
-        mse_arg_2 = labels_masked.contiguous().view(-1).double()
+        mse_arg_1 = logits_masked.contiguous().view(-1).float()
+        mse_arg_2 = labels_masked.contiguous().view(-1).float()
         kl_arg_1  = torch.log(F.softmax(logits_masked.squeeze()/self.tau, dim=-1) + 1e-9)
         kl_arg_2  = F.softmax(labels_masked.squeeze()/self.tau, dim=-1)
         mse_loss = self.mse(mse_arg_1,mse_arg_2)
@@ -346,10 +360,10 @@ class Trainer:
     def loss_fn_train(self,logits,labels,logits_status,status):
         kl_arg_1     = torch.log(F.softmax(logits.squeeze() / 0.1, dim=-1) + 1e-9)
         kl_arg_2     = F.softmax(labels.squeeze() / 0.1, dim=-1)
-        mse_arg_1    = logits.contiguous().view(-1).double()
-        mse_arg_2    = labels.contiguous().view(-1).double()
-        margin_arg_1 = (logits_status * 2 - 1).contiguous().view(-1).double()
-        margin_arg_2 = (status * 2 - 1).contiguous().view(-1).double()
+        mse_arg_1    = logits.contiguous().view(-1).float()
+        mse_arg_2    = labels.contiguous().view(-1).float()
+        margin_arg_1 = (logits_status * 2 - 1).contiguous().view(-1).float()
+        margin_arg_2 = (status * 2 - 1).contiguous().view(-1).float()
 
         kl_loss      = self.kl( kl_arg_1,  kl_arg_2)
         mse_loss     = self.mse(mse_arg_1, mse_arg_2)

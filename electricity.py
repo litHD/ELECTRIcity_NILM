@@ -6,6 +6,7 @@ from   config            import *
 from   UKDALE_Parser     import *
 from   REDD_Parser       import *
 from   Refit_Parser      import *
+from   Custom_parser     import *
 from   Electricity_model import *
 from   NILM_Dataloader   import *
 from   Trainer           import *
@@ -26,12 +27,15 @@ if __name__ == "__main__":
         args.house_indicies = [1, 2, 3, 4, 5]
         ds_parser = UK_Dale_Parser(args)
     elif args.dataset_code == 'refit':
-        args.house_indicies = [1,2,3,5,16]
+        #args.house_indicies = [1,2,3,5,16]
         args.sampling = '7s'
         ds_parser = Refit_Parser(args)
+    elif args.dataset_code == 'custom':
+        ds_parser = Custom_Parser(args)
+        args.sampling = '7s'
 
     model = ELECTRICITY(args)
-    
+    model.float()
     trainer = Trainer(args,ds_parser,model)
 
     #Training Loop
