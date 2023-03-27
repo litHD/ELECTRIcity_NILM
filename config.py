@@ -50,7 +50,7 @@ def get_args():
     parser.add_argument('--num_epochs',          type = int,   default = 90)
     parser.add_argument('--tau',                 type = float, default = 0.1)
 
-
+#argomenti necessari per settare ottimizzatore ed eventuale lr decay
     parser.add_argument('--optimizer',           type = str,   default = 'adam',    choices=['sgd', 'adam', 'adamw'])
     parser.add_argument('--lr',                  type = float, default = 1e-4)
     parser.add_argument('--enable_lr_schedule',  type = bool,  default = False)

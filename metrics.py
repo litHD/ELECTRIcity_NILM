@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from sklearn.metrics import confusion_matrix
 
-
+#calcola accuratezza, precisione, richiamo e f1 score
 def acc_precision_recall_f1_score(status,status_pred):
     assert status.shape == status_pred.shape
     
@@ -31,6 +31,7 @@ def acc_precision_recall_f1_score(status,status_pred):
 
     return np.array(accs), np.array(precisions), np.array(recalls), np.array(f1_scores)
 
+#calcola errore assoluto medio e errore relativo medio 
 def regression_errors(pred, label):
     assert pred.shape == label.shape
     
@@ -57,7 +58,7 @@ def regression_errors(pred, label):
 
 
 
-
+#calcola lo stato di un disaggregato in base ai parametri selezionati nella init
 def compute_status(data,threshold,min_on,min_off):
     status = np.zeros(data.shape)
     if len(data.squeeze().shape) == 1:

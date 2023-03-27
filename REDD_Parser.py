@@ -40,7 +40,7 @@ class Redd_Parser:
             self.x = (self.x - self.x_min)/(self.x_max-self.x_min)
         self.status          = self.compute_status(self.y)
 
-        
+#data la struttura di ogni dataset, carica in memoria l'elenco di case scelte e il disaggregato dell'elettrodomestico selezionato        
     def load_data(self):
         for appliance in self.appliance_names:
             assert appliance in ['dishwasher','refrigerator', 'microwave', 'washer_dryer']
@@ -109,7 +109,7 @@ class Redd_Parser:
 
             return entire_data.values[:, 0], entire_data.values[:, 1]
     
-    
+    #calcola lo stato di un disaggregato in base ai parametri selezionati nella init
     def compute_status(self, data):
 
         initial_status = data >= self.threshold[0]

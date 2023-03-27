@@ -45,7 +45,7 @@ class Custom_Parser:
         print(np.sum(self.status))
 
 
-
+#lettura dataset formattato in in cartelle e usando i .npy invecehe che coi csv, piu' modulare e piu' semplice da comporre 
     def load_data(self):
 
         entire_main = []
@@ -65,7 +65,7 @@ class Custom_Parser:
 
 
 
-
+#calcolo lo stato del disaggregato 
     def compute_status(self,data):
         initial_status = data >= self.threshold[0]
         status_diff    = np.diff(initial_status)

@@ -43,7 +43,8 @@ class UK_Dale_Parser:
             self.x = (self.x - self.x_min)/(self.x_max-self.x_min)
             
         self.status = self.compute_status(self.y)
-    
+
+#data la struttura di ogni dataset, carica in memoria l'elenco di case scelte e il disaggregato dell'elettrodomestico selezionato
     def load_data(self):
         
         for appliance in self.appliance_names:
@@ -106,7 +107,8 @@ class UK_Dale_Parser:
         entire_data                  = entire_data.clip([0] * len(entire_data.columns), self.cutoff, axis=1) # force values to be between 0 and cutoff
         
         return entire_data.values[:, 0], entire_data.values[:, 1]
-
+    
+#calcola lo stato di un disaggregato in base ai parametri selezionati nella init
     def compute_status(self, data):
 
         initial_status = data >= self.threshold[0]

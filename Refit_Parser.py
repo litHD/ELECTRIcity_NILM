@@ -9,7 +9,7 @@ class Refit_Parser:
 
     def __init__(self, args, stats = None):
         self.dataset_location = args.refit_location
-        assert 'Data','Labels' in os.listdir(self.dataset_location);'Incorrect Folder Structure'
+        assert 'data','labels' in os.listdir(self.dataset_location);
         self.data_location    = Path(args.refit_location).joinpath('data')
         self.labels_location  = Path(args.refit_location).joinpath('labels')
 
@@ -47,7 +47,7 @@ class Refit_Parser:
         print(np.sum(self.status))
 
 
-
+#data la struttura di ogni dataset, carica in memoria l'elenco di case scelte e il disaggregato dell'elettrodomestico selezionato
     def load_data(self):
         for house_idx in self.house_indicies:
             filename  = 'house'+str(house_idx)+'.csv'
@@ -67,7 +67,7 @@ class Refit_Parser:
                 house_data.columns = house_labels
                 house_data = house_data.set_index('Time')
 
-                idx_to_drop = house_data[house_data['issues']==1].index
+                idx_to_drop = house_data[house_data['issues']==1].index 
                 house_data = house_data.drop(index = idx_to_drop, axis = 0)
                 house_data = house_data[['aggregate',self.appliance_names[0]]]
                 house_data = house_data.resample(self.sampling).mean().fillna(method='ffill', limit=30)
@@ -90,7 +90,7 @@ class Refit_Parser:
 
 
 
-
+#calcola lo stato di un disaggregato in base ai parametri selezionati nella init
     def compute_status(self,data):
         initial_status = data >= self.threshold[0]
         status_diff    = np.diff(initial_status)
